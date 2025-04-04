@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>3D VR Test</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+    <script src="https://cdn.babylonjs.com/webxr/babylon.webxr.min.js"></script>
+    <style>
+      html, body {
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+      }
+      canvas {
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="renderCanvas"></canvas>
+
+    <script>
+      const canvas = document.getElementById("renderCanvas");
+
+      let engine;
+
+      try {
+        // Verifica suporte ao WebGL
+        if (!BABYLON.Engine.isSupported()) {
+          throw new Error("Seu dispositivo não suporta WebGL.");
+        }
+
+        engine = new BABYLON.Engine(canvas, true);
+      } catch (e) {
+        alert("Erro ao iniciar o Babylon.js:\n" + e.message);
+      }
+
+      const createScene = async function () {
+        const scene = new BABYLON.Scene(engine);
+
+        const camera = new BABYLON.UniversalCamera("camera1", new BABYLON.Vector3(0, 1.6, -3), scene);
+        camera.setTarget(BABYLON.Vector3.Zero());
+        camera.attachControl(canvas, true);
+
+        const light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+        light.intensity = 0.9;
+
+        const box = BABYLON.MeshBuilder.CreateBox("box", { size: 1 }, scene);
+        box.position.y = 0.5;
+
+        const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 10, height: 10 }, scene);
+
+        try {
+          const xr = await scene.createDefaultXRExperienceAsync({
+            uiOptions: {
+              sessionMode: "immersive-vr",
+            },
+            optionalFeatures: true,
+          });
+        } catch (e) {
+          alert("Seu navegador não suporta WebXR ou o modo VR não está disponível.\n\n" + e.message);
+        }
+
+        return scene;
+      };
+
+      if (engine) {
+        createScene().then(function (scene) {
+          engine.runRenderLoop(function () {
+            scene.render();
+          });
+        });
+
+        window.addEventListener("resize", function () {
+          engine.resize();
+        });
+      }
+    </script>
+  </body>
+</html>
